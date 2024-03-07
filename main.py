@@ -12,11 +12,9 @@ root.geometry("500x350")
 # Establish connection to the SQL Server database
 conn = pyodbc.connect(
     "Driver={SQL Server};"
-    "Server=localhost\SQLEXPRESS;"
-    "Database=____;"
+    "Server=localhost\SQLEXPRESS01;"
+    "Database=pythonapp;"
     "Trusted_Connection=yes;"
-    "UID=____;"
-    "PWD=____;"
 )
 
 def switch_event():
@@ -47,19 +45,27 @@ def login():
     username = entry1.get()
     password = entry2.get()
     
-    # Hash the password for validation
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    
-    # Check if the username and hashed password match in the database
+    # Check if the username exists in the database
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password_hash))
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
-    cursor.close()
     
     if user:
-        print("Login successful!")
+        # Retrieve the hashed password from the database
+        stored_password_hash = user.password
+        
+        # Hash the entered password for comparison
+        entered_password_hash = hashlib.sha256(password.encode()).hexdigest()
+        
+        # Check if the entered password hash matches the stored password hash
+        if stored_password_hash == entered_password_hash:
+            print("Login successful!")
+        else:
+            print("Invalid password!")
     else:
-        print("Invalid username or password!")
+        print("Username or password incorrect")
+    
+    cursor.close()
 
 def switch_to_login():
     # Destroy the current window and create a new one for the login page
